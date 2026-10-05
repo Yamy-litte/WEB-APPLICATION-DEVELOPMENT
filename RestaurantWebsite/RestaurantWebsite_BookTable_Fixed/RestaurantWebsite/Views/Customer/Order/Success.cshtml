@@ -1,0 +1,84 @@
+﻿﻿@using System.Linq
+@model RestaurantWebsite.Models.Order
+
+@{
+    ViewBag.Title = "Order Success";
+    ViewBag.BodyClass = "sub_page";
+    var payment = Model.Payments != null
+        ? Model.Payments.OrderByDescending(p => p.PaymentDate).FirstOrDefault()
+        : null;
+}
+
+<section class="food_section layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center mb-4">
+            <h2>Order Placed Successfully</h2>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <div class="text-center mb-4">
+                        <i class="fa fa-check-circle" aria-hidden="true" style="font-size:60px;color:#ffbe33;"></i>
+                        <h3 class="mt-3">Thank you for your order!</h3>
+                        <p class="text-muted mb-0">
+                            Your order is now <strong>@Model.Status</strong> and will be processed by Restaurant Staff.
+                        </p>
+                    </div>
+
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between mb-2"><span>Order ID</span><strong>#@Model.Id</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Order Type</span><strong>@Model.OrderType</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Payment</span><strong>@(payment != null ? payment.PaymentMethod : "N/A")</strong></div>
+                        <div class="d-flex justify-content-between"><span>Status</span><strong class="order-status-text">@Model.Status</strong></div>
+                    </div>
+
+                    @if (Model.OrderType == "Delivery")
+                    {
+                        <div class="mb-3">
+                            <strong>Delivery Address</strong>
+                            <div class="text-muted mt-1">@Model.DeliveryAddress</div>
+                        </div>
+                    }
+                    else if (Model.OrderType == "Dine-in")
+                    {
+                        <div class="mb-3">
+                            <strong>Dine-in Reservation</strong>
+                            <div class="text-muted mt-1">
+                                @if (Model.Reservation != null)
+                                {
+                                    @Model.Reservation.ReservationDate.ToString("dd/MM/yyyy HH:mm")
+                                    if (Model.Table != null)
+                                    {
+                                        @: - Table @Model.Table.TableNumber
+                                    }
+                                }
+                                else
+                                {
+                                    @: - Linked reservation
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-3"><strong>Pickup Type</strong><div class="text-muted mt-1">Takeaway</div></div>
+                    }
+
+                    <div class="d-flex justify-content-between border-top pt-3"><span>Subtotal</span><strong>@Model.SubTotal.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span>Discount</span><strong>-@Model.DiscountAmount.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span>Delivery Fee</span><strong>@Model.DeliveryFee.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                        <strong>Total</strong>
+                        <strong class="text-danger">@Model.TotalAmount.ToString("N0") VNĐ</strong>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Details", "Order", new { id = Model.Id })" class="btn btn-warning text-white mr-2">View Order</a>
+                        <a href="@Url.Action("Index", "Menu")" class="btn btn-outline-secondary">Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

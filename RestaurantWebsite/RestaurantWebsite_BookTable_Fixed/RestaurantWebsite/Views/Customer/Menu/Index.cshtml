@@ -1,0 +1,735 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using RestaurantWebsite.Models
+
+@model IEnumerable<RestaurantWebsite.Models.Dish>
+
+@{
+    ViewBag.Title = "Menu";
+    ViewBag.BodyClass = "sub_page";
+
+    var combos =
+        ViewBag.Combos as IEnumerable<Combo>
+        ?? new List<Combo>();
+
+    var search =
+        ViewBag.Search as string
+        ?? "";
+}
+
+<section class="food_section layout_padding">
+
+    <div class="container">
+
+        <!-- ================================================= -->
+        <!-- TITLE -->
+        <!-- ================================================= -->
+
+        <div class="heading_container heading_center">
+
+            <h2>
+                Our Menu
+            </h2>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- SEARCH -->
+        <!-- ================================================= -->
+
+        <div class="row justify-content-center mb-4">
+
+            <div class="col-md-8 col-lg-7">
+
+                @using (Html.BeginForm(
+                    "Index",
+                    "Menu",
+                    FormMethod.Get,
+                    new
+                    {
+                        @class = "menu-search-form"
+                    }))
+                {
+                    <div class="input-group">
+
+                        <input type="text"
+                               name="search"
+                               value="@search"
+                               class="form-control"
+                               placeholder="Search dishes or combos..."
+                               autocomplete="off" />
+
+                        <div class="input-group-append">
+
+                            <button type="submit"
+                                    class="btn btn-warning text-white">
+
+                                <i class="fa fa-search"></i>
+
+                                Search
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- CATEGORY FILTER -->
+        <!-- ================================================= -->
+
+        <ul class="filters_menu">
+
+            <!-- ALL -->
+
+            <li class="active"
+                data-filter="*">
+
+                All
+
+            </li>
+
+
+            <!-- DISH CATEGORIES -->
+
+            @if (ViewBag.Categories != null)
+            {
+                foreach (var category in ViewBag.Categories)
+                {
+                    <li data-filter=".category-@category.Id">
+
+                        @category.Name
+
+                    </li>
+                }
+            }
+
+
+            <!-- COMBO -->
+
+            <li data-filter=".combo-item">
+
+                Combo
+
+            </li>
+
+        </ul>
+
+
+        <!-- ================================================= -->
+        <!-- MENU ITEMS -->
+        <!-- ================================================= -->
+
+        <div class="filters-content">
+
+            <div class="row grid">
+
+                <!-- ================================================= -->
+                <!-- DISH -->
+                <!-- ================================================= -->
+
+                @if (Model != null)
+                {
+                    foreach (var item in Model)
+                    {
+                        <div class="col-sm-6 col-lg-4 all category-@item.CategoryId">
+
+                            <div class="box">
+
+                                <div>
+
+                                    <!-- DISH IMAGE -->
+
+                                    <div class="img-box">
+
+                                        @if (
+                                            item.DishImages != null &&
+                                            item.DishImages.Any())
+                                        {
+                                            var primaryImg =
+                                                item.DishImages
+                                                    .FirstOrDefault(
+                                                        img => img.IsPrimary)
+                                                ??
+                                                item.DishImages.First();
+
+                                            <img src="@Url.Content(primaryImg.ImageUrl)"
+                                                 alt="@item.Name" />
+                                        }
+                                        else
+                                        {
+                                            <img src="@Url.Content(
+                                                "~/Resources/User/images/f1.png")"
+                                                 alt="@item.Name" />
+                                        }
+
+                                    </div>
+
+
+                                    <!-- DISH INFORMATION -->
+
+                                    <div class="detail-box">
+
+                                        <h5>
+                                            @item.Name
+                                        </h5>
+
+
+                                        <p>
+                                            @item.Description
+                                        </p>
+
+
+                                        <div class="options">
+
+                                            <h6>
+                                                @item.Price.ToString("N0") VND
+                                            </h6>
+
+
+                                            <!-- DISH DETAILS -->
+
+                                            <a href="javascript:void(0);"
+                                               onclick="openDishDetails(@item.Id)"
+                                               title="View Details">
+
+                                                <i class="fa fa-shopping-cart"></i>
+
+                                            </a>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+                }
+
+
+                <!-- ================================================= -->
+                <!-- COMBO -->
+                <!-- ================================================= -->
+                @foreach (var combo in combos)
+                {
+                    <div class="col-sm-6 col-lg-4 all combo-item">
+
+                        <div class="box">
+
+                            <div>
+
+                                <div class="img-box">
+
+                                    @if (!string.IsNullOrEmpty(combo.ImageUrl))
+                                    {
+                                        <img src="@Url.Content(combo.ImageUrl)"
+                                             alt="@combo.Name" />
+                                    }
+                                    else
+                                    {
+                                        <img src="@Url.Content("~/Resources/User/images/o2.jpg")"
+                                             alt="@combo.Name" />
+                                    }
+
+                                </div>
+
+                                <div class="detail-box">
+
+                                    <h5>
+                                        @combo.Name
+                                    </h5>
+
+                                    <p>
+                                        @(
+                            !string.IsNullOrEmpty(combo.Description)
+                                ? combo.Description
+                                : "Delicious combo prepared for you."
+                        )
+                                    </p>
+
+                                    <div class="options">
+
+                                        <h6>
+                                            @combo.Price.ToString("N0") VND
+                                        </h6>
+
+                                        <a href="javascript:void(0);"
+                                           onclick="openComboDetails(@combo.Id)"
+                                           title="View Combo Details">
+
+                                            <i class="fa fa-shopping-cart"></i>
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+
+
+                <!-- ================================================= -->
+                <!-- NO RESULT -->
+                <!-- ================================================= -->
+
+                @if (
+                    (Model == null || !Model.Any()) &&
+                    !combos.Any())
+                {
+                    <div class="col-12 text-center py-5">
+
+                        <h5>
+                            No menu items found.
+                        </h5>
+
+                        @if (!string.IsNullOrWhiteSpace(search))
+                        {
+                            <p class="text-muted">
+
+                                No dishes or combos match:
+                                <strong>@search</strong>
+
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">
+
+                                No dishes or combos are available at the moment.
+
+                            </p>
+                        }
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ===================================================== -->
+<!-- DISH DETAILS MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade"
+     id="dishDetailsModal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="dishDetailsModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered"
+         role="document">
+
+        <div class="modal-content"
+             style="border-radius:15px;overflow:hidden;">
+
+            <div class="modal-header bg-warning text-white">
+
+                <h5 class="modal-title font-weight-bold"
+                    id="dishDetailsModalLabel">
+
+                    Dish Details
+
+                </h5>
+
+
+                <button type="button"
+                        class="close text-white"
+                        data-dismiss="modal"
+                        aria-label="Close">
+
+                    <span aria-hidden="true">
+                        &times;
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body"
+                 id="modalBodyContent">
+
+                <div class="text-center p-4">
+
+                    <div class="spinner-border text-warning"
+                         role="status">
+
+                        <span class="sr-only">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- COMBO DETAILS MODAL -->
+<!-- ===================================================== -->
+
+<div class="modal fade"
+     id="comboDetailsModal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="comboDetailsModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered"
+         role="document">
+
+        <div class="modal-content"
+             style="border-radius:15px;overflow:hidden;">
+
+            <div class="modal-header bg-warning text-white">
+
+                <h5 class="modal-title font-weight-bold"
+                    id="comboDetailsModalLabel">
+
+                    Combo Details
+
+                </h5>
+
+
+                <button type="button"
+                        class="close text-white"
+                        data-dismiss="modal"
+                        aria-label="Close">
+
+                    <span aria-hidden="true">
+                        &times;
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="modal-body"
+                 id="comboModalBodyContent">
+
+                <div class="text-center p-4">
+
+                    <div class="spinner-border text-warning"
+                         role="status">
+
+                        <span class="sr-only">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .menu-search-form {
+        margin-bottom: 20px;
+    }
+
+        .menu-search-form .form-control {
+            height: 48px;
+        }
+
+        .menu-search-form .btn {
+            height: 48px;
+            min-width: 110px;
+        }
+</style>
+
+
+@section scripts {
+
+    <script>
+
+        /*
+         * =====================================================
+         * MENU FILTER - ISOTOPE
+         * =====================================================
+         */
+
+        $(document).ready(function () {
+
+            var $grid = $(".grid").isotope({
+
+                itemSelector: ".all",
+
+                layoutMode: "fitRows"
+
+            });
+
+
+            $(".filters_menu li").on("click", function () {
+
+                $(".filters_menu li")
+                    .removeClass("active");
+
+                $(this)
+                    .addClass("active");
+
+
+                var filterValue =
+                    $(this).attr("data-filter");
+
+
+                $grid.isotope({
+
+                    filter: filterValue
+
+                });
+
+            });
+
+        });
+
+
+        /*
+         * =====================================================
+         * OPEN DISH DETAILS
+         * =====================================================
+         */
+
+        function openDishDetails(dishId) {
+
+            var $modalBody =
+                $("#modalBodyContent");
+
+
+            $modalBody.html(
+
+                '<div class="text-center p-4">' +
+
+                    '<div class="spinner-border text-warning" role="status">' +
+
+                        '<span class="sr-only">' +
+                            'Loading...' +
+                        '</span>' +
+
+                    '</div>' +
+
+                '</div>'
+
+            );
+
+
+            $("#dishDetailsModal").modal("show");
+
+
+            $.ajax({
+
+                url: '@Url.Action("Details", "Menu")',
+
+                type: "GET",
+
+                dataType: "html",
+
+                cache: false,
+
+                data: {
+                    id: dishId
+                },
+
+
+                success: function (response) {
+
+                    $modalBody.html(response);
+
+                },
+
+
+                error: function (xhr) {
+
+                    console.error(
+                        "Dish Details Error:",
+                        xhr.responseText
+                    );
+
+
+                    $modalBody.html(
+
+                        '<div class="text-center text-danger p-4">' +
+
+                            '<h5>' +
+                                'Cannot load dish details.' +
+                            '</h5>' +
+
+                            '<p>Server returned ' +
+                                xhr.status +
+                            '.</p>' +
+
+                        '</div>'
+
+                    );
+
+                }
+
+            });
+
+        }
+
+
+        /*
+         * =====================================================
+         * OPEN COMBO DETAILS
+         * =====================================================
+         */
+
+        function openComboDetails(comboId) {
+
+            var $modalBody =
+                $("#comboModalBodyContent");
+
+
+            $modalBody.html(
+
+                '<div class="text-center p-4">' +
+
+                    '<div class="spinner-border text-warning" role="status">' +
+
+                        '<span class="sr-only">' +
+                            'Loading...' +
+                        '</span>' +
+
+                    '</div>' +
+
+                '</div>'
+
+            );
+
+
+            $("#comboDetailsModal").modal("show");
+
+
+            $.ajax({
+
+                url: '@Url.Action("Details", "Combo")',
+
+                type: "GET",
+
+                dataType: "html",
+
+                cache: false,
+
+                data: {
+                    id: comboId
+                },
+
+
+                success: function (response) {
+
+                    $modalBody.html(response);
+
+                },
+
+
+                error: function (xhr) {
+
+                    console.error(
+                        "Combo Details Error:",
+                        xhr.responseText
+                    );
+
+
+                    $modalBody.html(
+
+                        '<div class="text-center text-danger p-4">' +
+
+                            '<h5>' +
+                                'Cannot load combo details.' +
+                            '</h5>' +
+
+                            '<p>Server returned ' +
+                                xhr.status +
+                            '.</p>' +
+
+                        '</div>'
+
+                    );
+
+                }
+
+            });
+
+        }
+
+
+
+        /* =====================================================
+         * REVIEW SUBMISSION
+         * ===================================================== */
+        @if (ViewBag.OpenDishId != null)
+        {
+            <text>
+            openDishDetails(@ViewBag.OpenDishId);
+            </text>
+        }
+
+
+        $(document).on("submit", "#reviewForm", function (e) {
+            e.preventDefault();
+
+            var form = $(this);
+            var message = $("#reviewMessage");
+
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        message.html('<div class="alert alert-success">' + response.message + '</div>');
+                        var dishId = form.find("input[name='dishId']").val();
+                        setTimeout(function () {
+                            openDishDetails(dishId);
+                        }, 700);
+                    } else {
+                        message.html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    message.html('<div class="alert alert-danger">Could not submit the review. Please try again.</div>');
+                }
+            });
+        });
+
+    </script>
+
+}

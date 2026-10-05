@@ -1,0 +1,233 @@
+﻿@using System.Linq
+@using System.Collections.Generic
+@model RestaurantWebsite.Models.Order
+
+@{
+    ViewBag.Title = "Order #" + Model.Id;
+    ViewBag.BodyClass = "sub_page";
+    var payment = Model.Payments != null ? Model.Payments.OrderByDescending(p => p.PaymentDate).FirstOrDefault() : null;
+    var reviewedDishIds = ViewBag.ReviewedDishIds as HashSet<int> ?? new HashSet<int>();
+    bool hasExperienceReview = ViewBag.HasExperienceReview != null && (bool)ViewBag.HasExperienceReview;
+
+    string reservationInfo = "Linked reservation";
+
+    if (Model != null && Model.Reservation != null)
+    {
+        reservationInfo = Model.Reservation.ReservationDate.ToString("dd/MM/yyyy HH:mm");
+
+        if (Model.Table != null)
+        {
+            reservationInfo += " - Table " + Model.Table.TableNumber;
+        }
+    }
+}
+
+<section class="layout_padding">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="heading_container"><h2>Order #@Model.Id</h2></div>
+            <a href="@Url.RouteUrl("CustomerOrders")" class="btn btn-outline-secondary">Back to My Orders</a>
+        </div>
+
+        @if (TempData["OrderSuccess"] != null)
+        { <div class="alert alert-success">@TempData["OrderSuccess"]</div> }
+        @if (TempData["OrderError"] != null)
+        { <div class="alert alert-danger">@TempData["OrderError"]</div> }
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h4>Order Information</h4>
+                    <div class="row mt-3">
+                        <div class="col-md-6"><p><strong>Order Type:</strong> @Model.OrderType</p></div>
+                        <div class="col-md-6"><p><strong>Status:</strong> <span class="badge badge-info order-status-badge">@Model.Status</span></p></div>
+                        <div class="col-md-6"><p><strong>Created:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p></div>
+                        <div class="col-md-6"><p><strong>Phone:</strong> @Model.Phone</p></div>
+                    </div>
+
+                    @if (Model.OrderType == "Delivery")
+                    {
+                        <p>
+                            <strong>Delivery Address:</strong>
+                            @Model.DeliveryAddress
+                        </p>
+                    }
+                    else if (Model.OrderType == "Dine-in")
+                    {
+                        <p>
+                            <strong>Reservation:</strong>
+                            @reservationInfo
+                        </p>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong>Pickup:</strong> Takeaway
+                        </p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Note))
+                    {
+                        <p><strong>Note:</strong> @Model.Note</p>
+                    }
+
+                    <hr />
+                    <h5>Items</h5>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <div class="border-bottom py-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>
+                                    @(item.Dish != null ? item.Dish.Name : item.Combo != null ? item.Combo.Name : "Item")
+                                </strong>
+                                <strong>@item.SubTotal.ToString("N0") VNĐ</strong>
+                            </div>
+                            <div class="text-muted">@item.Quantity x @item.UnitPrice.ToString("N0") VNĐ</div>
+
+                            @if (Model.Status == "Delivered" && item.DishId.HasValue)
+                            {
+                                if (reviewedDishIds.Contains(item.DishId.Value))
+                                {
+                                    <div class="text-success small mt-2"><i class="fa fa-check-circle"></i> Reviewed</div>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("Index", "Menu", new { dishId = item.DishId.Value })" class="btn btn-sm btn-outline-warning mt-2">Review This Dish</a>
+                                }
+                            }
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between mt-3"><span>Subtotal</span><strong>@Model.SubTotal.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span>Discount</span><strong>-@Model.DiscountAmount.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-2"><span>Delivery Fee</span><strong>@Model.DeliveryFee.ToString("N0") VNĐ</strong></div>
+                    <div class="d-flex justify-content-between mt-3 pt-3 border-top"><strong>Total</strong><strong class="text-danger">@Model.TotalAmount.ToString("N0") VNĐ</strong></div>
+
+                    @if (Model.Status == "Pending")
+                    {
+                        <div class="mt-4">
+                            @using (Html.BeginForm("Cancel", "Order", FormMethod.Post, new { onsubmit = "return confirm('Cancel this order?');" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button class="btn btn-danger">Cancel Order</button>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h4>Order Tracking</h4>
+                    @{ var statuses = new[] { "Pending", "Confirmed", "Preparing", "Ready", "Delivered" }; }
+                    @foreach (var status in statuses)
+                    {
+                        bool active = Model.Status == status;
+                        bool completed = Array.IndexOf(statuses, status) < Array.IndexOf(statuses, Model.Status);
+                        <div class="d-flex align-items-center mb-3">
+                            <div style="width:28px;height:28px;border-radius:50%;background:@(active || completed ? "#ffbe33" : "#ddd");color:#fff;text-align:center;line-height:28px;">
+                                @(completed ? "✓" : (Array.IndexOf(statuses, status) + 1).ToString())
+                            </div>
+                            <span class="ml-3 @(active ? "font-weight-bold" : "text-muted")">@status</span>
+                        </div>
+                    }
+                    @if (Model.Status == "Cancelled")
+                    {
+                        <div class="alert alert-danger">This order was cancelled.</div>
+                    }
+                </div>
+
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h4>Payment</h4>
+                    <p><strong>Method:</strong> @(payment != null ? payment.PaymentMethod : "Pending")</p>
+                    <p><strong>Status:</strong> @(payment != null ? payment.Status : "Pending")</p>
+                    <p><strong>Amount:</strong> @(payment != null ? payment.Amount.ToString("N0") : Model.TotalAmount.ToString("N0")) VNĐ</p>
+                    @if (payment != null && !string.IsNullOrWhiteSpace(payment.TransactionCode))
+                    { <p><strong>Transaction:</strong> @payment.TransactionCode</p> }
+                </div>
+
+                @if (Model.Status == "Delivered")
+                {
+                    <div class="bg-white p-4 rounded shadow-sm">
+                        <h4>Overall Dining Experience</h4>
+                        @if (hasExperienceReview)
+                        {
+                            <div class="alert alert-success">You have already reviewed this order.</div>
+                        }
+                        else
+                        {
+                            using (Html.BeginForm("AddExperienceReview", "Order", FormMethod.Post, new { id = "experienceReviewForm" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderId" value="@Model.Id" />
+                                <div class="form-group">
+                                    <label>Rating</label>
+                                    <div class="review-rating-selector" data-current-rating="0">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <label class="review-rating-item" data-rating="@i">
+                                                <input type="radio" name="rating" value="@i" />
+                                                <i class="fa fa-star-o text-muted"></i>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Comment</label>
+                                    <textarea name="comment" class="form-control" maxlength="1000" rows="4" placeholder="Share your dining experience..."></textarea>
+                                </div>
+                                <div id="experienceReviewMessage"></div>
+                                <button type="submit" class="btn btn-warning text-white">Submit Experience Review</button>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+<script>
+    $(function () {
+        function paintReviewStars(container, rating) {
+            $(container).find(".review-rating-item").each(function () {
+                var value = parseInt($(this).data("rating"), 10);
+                var icon = $(this).find("i");
+                icon.removeClass("fa-star fa-star-o text-warning text-muted");
+                icon.addClass(value <= rating ? "fa-star text-warning" : "fa-star-o text-muted");
+            });
+        }
+
+        $(document).on("click", ".review-rating-item", function () {
+            var rating = parseInt($(this).data("rating"), 10);
+            $(this).find("input").prop("checked", true);
+            paintReviewStars($(this).closest(".review-rating-selector"), rating);
+        });
+
+        $("#experienceReviewForm").on("submit", function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var message = $("#experienceReviewMessage");
+
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        message.html('<div class="alert alert-success">' + response.message + '</div>');
+                        form.replaceWith('<div class="alert alert-success">Review submitted successfully.</div>');
+                    } else {
+                        message.html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    message.html('<div class="alert alert-danger">Could not submit the review. Please try again.</div>');
+                }
+            });
+        });
+    });
+</script>
+}

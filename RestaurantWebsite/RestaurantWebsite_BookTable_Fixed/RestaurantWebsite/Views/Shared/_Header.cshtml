@@ -1,0 +1,102 @@
+@{
+    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool isCustomer = string.Equals(
+        Convert.ToString(Session["Role"]),
+        "Customer",
+        StringComparison.OrdinalIgnoreCase);
+
+    bool customerHomeActive =
+        currentController == "Customer" && currentAction == "Index";
+
+    bool customerMenuActive =
+        currentController == "Menu" || currentController == "Combo";
+
+    bool customerAboutActive =
+        currentController == "Customer" && currentAction == "About";
+
+    bool customerBookingActive =
+        currentController == "Reservation";
+}
+
+<header class="header_section">
+    <div class="container">
+        <nav class="navbar navbar-expand-lg custom_nav-container">
+
+            <a class="navbar-brand"
+               href="@Url.RouteUrl("CustomerHome")">
+                <span>RESTAURANT AND<br /> FOOD ORDER </span>
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class=""></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item @(customerHomeActive ? "active" : "")">
+                        <a class="nav-link" href="@Url.RouteUrl("CustomerHome")">Home</a>
+                    </li>
+
+                    <li class="nav-item @(customerMenuActive ? "active" : "")">
+                        <a class="nav-link" href="@Url.Action("Index", "Menu")">Menu</a>
+                    </li>
+
+                    <li class="nav-item @(customerAboutActive ? "active" : "")">
+                        <a class="nav-link" href="@Url.RouteUrl("CustomerAbout")">About</a>
+                    </li>
+
+                    <li class="nav-item @(customerBookingActive ? "active" : "")">
+                        <a class="nav-link" href="@Url.Action("Index", "Reservation")">Book Table</a>
+                    </li>
+                </ul>
+
+                <div class="user_option">
+                    @if (isCustomer)
+                    {
+                        <a class="user_link"
+                           href="@Url.RouteUrl("CustomerProfile")"
+                           title="Account">
+                            <i class="fa fa-user" aria-hidden="true"></i>
+                        </a>
+
+                        <span class="ml-2 mr-2 text-white">
+                            @Session["UserName"]
+                        </span>
+
+                        <a class="cart_link"
+                           href="@Url.RouteUrl("CustomerCart")"
+                           title="Cart">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                        </a>
+
+                        <a class="user_link"
+                           href="@Url.Action("Logout", "Account")"
+                           title="Logout">
+                            <i class="fa fa-sign-out" aria-hidden="true"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="cart_link"
+                           href="@Url.RouteUrl("CustomerCart")"
+                           title="Cart">
+                            <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                        </a>
+
+                        <a href="@Url.Action("Login", "Account")" class="order_online">
+                            Login
+                        </a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>

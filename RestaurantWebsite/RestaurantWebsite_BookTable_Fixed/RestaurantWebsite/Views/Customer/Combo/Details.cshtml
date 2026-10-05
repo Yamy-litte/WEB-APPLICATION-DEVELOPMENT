@@ -1,0 +1,273 @@
+﻿@using System.Linq
+@model RestaurantWebsite.Models.Combo
+
+@{
+    Layout = null;
+}
+
+
+@if (Model == null)
+{
+    <div class="text-center p-4">
+
+        <p class="text-danger">
+            Combo information cannot be found.
+        </p>
+
+    </div>
+}
+else
+{
+    <div class="row">
+
+        <!-- ================================================= -->
+        <!-- COMBO IMAGE -->
+        <!-- ================================================= -->
+
+        <div class="col-md-5">
+
+            <div class="img-box text-center p-2 bg-light rounded">
+
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Url.Content(Model.ImageUrl)"
+                         alt="@Model.Name"
+                         class="img-fluid rounded"
+                         style="width:100%;max-height:300px;object-fit:cover;" />
+                }
+                else
+                {
+                    <img src="@Url.Content("~/Resources/User/images/o2.jpg")"
+                         alt="@Model.Name"
+                         class="img-fluid rounded"
+                         style="width:100%;max-height:300px;object-fit:cover;" />
+                }
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- COMBO INFORMATION -->
+        <!-- ================================================= -->
+
+        <div class="col-md-7">
+
+            <div class="detail-box">
+
+                <h3 class="text-dark font-weight-bold">
+                    @Model.Name
+                </h3>
+
+
+                <h4 class="text-danger font-weight-bold my-3">
+                    @Model.Price.ToString("N0") VND
+                </h4>
+
+
+                <p class="text-secondary">
+
+                    @(
+                        !string.IsNullOrEmpty(Model.Description)
+                            ? Model.Description
+                            : "No description available."
+                    )
+
+                </p>
+
+
+                <!-- ================================================= -->
+                <!-- COMBO ITEMS -->
+                <!-- ================================================= -->
+
+                <div class="mt-4">
+
+                    <h5 class="font-weight-bold">
+                        Combo Includes
+                    </h5>
+
+
+                    @if (Model.ComboItems != null &&
+                         Model.ComboItems.Any())
+                    {
+                        <div class="mt-3">
+
+                            @foreach (var item in Model.ComboItems)
+                            {
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+
+                                    <div>
+
+                                        @if (item.Dish != null)
+                                        {
+                                            <strong>
+                                                @item.Dish.Name
+                                            </strong>
+                                        }
+                                        else
+                                        {
+                                            <strong>
+                                                Dish #@item.DishId
+                                            </strong>
+                                        }
+
+                                    </div>
+
+
+                                    <span class="badge badge-warning">
+
+                                        x @item.Quantity
+
+                                    </span>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mt-3">
+
+                            This combo has no items yet.
+
+                        </p>
+                    }
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- STATUS -->
+                <!-- ================================================= -->
+
+                <div class="mt-3">
+
+                    <span class="text-success font-weight-bold">
+
+                        ● Available
+
+                    </span>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- ACTION -->
+                <!-- ================================================= -->
+
+                <div class="mt-4">
+
+                    @if (Session["UserId"] == null)
+                    {
+                        <a href="@Url.Action(
+                                    "Login",
+                                    "Account",
+                                    new
+                                    {
+                                        returnUrl = Url.Action(
+                                            "Details",
+                                            "Combo",
+                                            new
+                                            {
+                                                id = Model.Id
+                                            })
+                                    })"
+                           class="btn btn-warning btn-block text-white font-weight-bold py-2">
+
+                            <i class="fa fa-sign-in"></i>
+
+                            Login to Order
+
+                        </a>
+                    }
+                    else
+                    {
+                        using (Html.BeginForm(
+                            "AddComboToCart",
+                            "Menu",
+                            FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="id"
+                                   value="@Model.Id" />
+
+                            <div class="form-group mb-3">
+
+                                <label class="text-secondary d-block mb-2">
+                                    Quantity:
+                                </label>
+
+                                <div class="d-flex align-items-center">
+
+                                    <button type="button"
+                                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                                            style="width:48px;height:48px;font-size:24px;font-weight:bold;padding:0;"
+                                            onclick="
+                                            var input=document.getElementById('comboQuantity');
+                                            var value=parseInt(input.value, 10) || 1;
+                                            if (value>
+                                        1) {
+                                        input.value = value - 1;
+                                        }
+                                        "
+                                        aria-label="Decrease quantity">
+
+                                        −
+
+                                    </button>
+
+
+                                    <input type="text"
+                                           id="comboQuantity"
+                                           name="quantity"
+                                           value="1"
+                                           readonly
+                                           class="form-control text-center mx-2"
+                                           style="width:80px;height:48px;font-size:18px;font-weight:bold;background:#fff;"
+                                           aria-label="Combo quantity" />
+
+
+                                    <button type="button"
+                                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                                            style="width:48px;height:48px;font-size:24px;font-weight:bold;padding:0;"
+                                            onclick="
+                                            var input=document.getElementById('comboQuantity');
+                                            var value=parseInt(input.value, 10) || 1;
+                                            if (value < 100) {
+                                                    input.value = value + 1;
+                                                }
+                                            "
+                                            aria-label="Increase quantity">
+
+                                        +
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <button type="submit"
+                                    class="btn btn-warning btn-block text-white font-weight-bold py-2 shadow-sm">
+
+                                <i class="fa fa-shopping-cart"></i>
+
+                                Add to Cart
+
+                            </button>
+                        }
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}

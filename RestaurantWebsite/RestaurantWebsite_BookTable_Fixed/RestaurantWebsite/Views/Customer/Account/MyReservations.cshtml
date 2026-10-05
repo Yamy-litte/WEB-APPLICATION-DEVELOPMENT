@@ -1,0 +1,106 @@
+﻿@using System.Linq
+@model IEnumerable<RestaurantWebsite.Models.Reservation>
+
+@{
+    ViewBag.Title = "My Reservations";
+    ViewBag.BodyClass = "sub_page";
+}
+
+<section class="layout_padding">
+    <div class="container">
+        <div class="heading_container heading_center">
+            <h2>My Reservations</h2>
+        </div>
+
+        @if (TempData["ReservationSuccess"] != null)
+        {
+            <div class="alert alert-success mt-4">@TempData["ReservationSuccess"]</div>
+        }
+
+        @if (TempData["ReservationError"] != null)
+        {
+            <div class="alert alert-danger mt-4">@TempData["ReservationError"]</div>
+        }
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive mt-4">
+                <table class="table table-bordered bg-white">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Reservation</th>
+                            <th>Date / Time</th>
+                            <th>Guests</th>
+                            <th>Table</th>
+                            <th>Zone</th>
+                            <th>Status</th>
+                            <th>Special Request</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reservation in Model)
+                        {
+                            <tr>
+                                <td>#@reservation.Id</td>
+                                <td>@reservation.ReservationDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@reservation.PartySize</td>
+                                <td>@(reservation.Table != null ? "Table " + reservation.Table.TableNumber : "-")</td>
+                                <td>@(reservation.Table != null ? reservation.Table.Zone : "-")</td>
+                                <td>
+                                    @if (reservation.Status == "Confirmed")
+                                    {
+                                        <span class="badge badge-success order-status-badge">Đã đặt</span>
+                                    }
+                                    else if (reservation.Status == "Pending")
+                                    {
+                                        <span class="badge badge-warning order-status-badge">Chờ xác nhận</span>
+                                    }
+                                    else if (reservation.Status == "Cancelled")
+                                    {
+                                        <span class="badge badge-danger order-status-badge">Đã hủy</span>
+                                    }
+                                    else if (reservation.Status == "Rejected")
+                                    {
+                                        <span class="badge badge-secondary order-status-badge">Từ chối</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-info order-status-badge">@reservation.Status</span>
+                                    }
+                                </td>
+                                <td>@(string.IsNullOrWhiteSpace(reservation.SpecialRequest) ? "-" : reservation.SpecialRequest)</td>
+                                <td>
+                                    @if (reservation.Status != "Cancelled" && reservation.ReservationDate > DateTime.Now)
+                                    {
+                                        using (Html.BeginForm("Cancel", "Reservation", FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('Are you sure you want to cancel this reservation?');" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("id", reservation.Id)
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border mt-4 text-center">
+                You do not have any reservations yet.
+            </div>
+        }
+
+        <div class="text-center mt-3">
+            <a href="@Url.Action("Index", "Reservation")" class="btn btn-warning text-white mr-2">Book Table</a>
+            <a href="@Url.Action("Profile", "Account")" class="btn btn-outline-secondary">Back to Profile</a>
+        </div>
+    </div>
+</section>

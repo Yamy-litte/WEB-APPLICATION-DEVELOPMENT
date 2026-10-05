@@ -1,0 +1,94 @@
+@{
+    ViewBag.Title = "Login";
+    ViewBag.BodyClass = "sub_page";
+    var returnUrl = ViewBag.ReturnUrl as string;
+}
+
+<section class="food_section layout_padding">
+
+    <div class="container">
+
+        <div class="heading_container heading_center mb-4">
+            <h2>Login</h2>
+        </div>
+
+        <div class="row justify-content-center">
+
+            <div class="col-md-6 col-lg-5">
+
+                <div class="bg-white p-4 rounded shadow-sm">
+
+                    @if (TempData["AccountSuccess"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fa fa-check-circle mr-1"></i>
+                            @TempData["AccountSuccess"]
+                        </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        @Html.ValidationSummary(
+                            true,
+                            "Please check the information below.",
+                            new { @class = "alert alert-danger" })
+                    }
+
+                    @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="returnUrl"
+                               value="@returnUrl" />
+
+                        <div class="form-group">
+                            <label for="Email" class="font-weight-bold">
+                                Email
+                            </label>
+
+                            <input type="email"
+                                   id="Email"
+                                   name="email"
+                                   class="form-control"
+                                   maxlength="150"
+                                   value="@Request.Form["email"]"
+                                   placeholder="Enter your email"
+                                   required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Password" class="font-weight-bold">
+                                Password
+                            </label>
+
+                            <input type="password"
+                                   id="Password"
+                                   name="password"
+                                   class="form-control"
+                                   placeholder="Enter your password"
+                                   required />
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-warning text-white btn-block font-weight-bold">
+                            Login
+                        </button>
+                    }
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Don't have an account?</span>
+                        <a href="@Url.Action("Register", "Account")">
+                            Register
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>

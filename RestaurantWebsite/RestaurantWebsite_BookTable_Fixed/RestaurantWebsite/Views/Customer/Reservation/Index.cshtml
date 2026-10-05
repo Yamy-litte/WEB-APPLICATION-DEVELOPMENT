@@ -1,0 +1,156 @@
+@using System.Linq
+@model RestaurantWebsite.Models.Reservation
+
+@{
+    ViewBag.Title = "Book Table";
+    ViewBag.BodyClass = "sub_page";
+
+    var tables = ViewBag.AvailableTables as IEnumerable<RestaurantWebsite.Models.RestaurantTable>
+        ?? new List<RestaurantWebsite.Models.RestaurantTable>();
+
+    string minDate = ViewBag.MinReservationDate as string;
+    string maxDate = ViewBag.MaxReservationDate as string;
+}
+
+<section class="book_section layout_padding">
+    <div class="container">
+        <div class="heading_container">
+            <h2>Book A Table</h2>
+            <p class="text-muted">Choose your date, time, party size and preferred table to book your reservation.</p>
+        </div>
+
+        @if (TempData["ReservationSuccess"] != null)
+        {
+            <div class="alert alert-success mt-3">@TempData["ReservationSuccess"]</div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger mt-3">
+                @Html.ValidationSummary(false, "Please check the reservation information:")
+            </div>
+        }
+
+        <div class="row mt-4">
+            <div class="col-lg-7">
+                @using (Html.BeginForm("Book", "Reservation", FormMethod.Post, new { id = "reservationForm" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="form_container bg-white p-4 rounded shadow-sm">
+                        <div class="form-group">
+                            <label for="ReservationDate">Date & Time</label>
+                            <input type="datetime-local"
+                                   id="ReservationDate"
+                                   name="ReservationDate"
+                                   class="form-control"
+                                   value="@Model.ReservationDate.ToString("yyyy-MM-ddTHH:mm")"
+                                   min="@minDate"
+                                   max="@maxDate"
+                                   required />
+                            <small class="form-text text-muted">Bookings must be at least 30 minutes from now and no more than 30 days ahead.</small>
+                            @Html.ValidationMessageFor(m => m.ReservationDate, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="PartySize">Party Size</label>
+                            <input type="number"
+                                   id="PartySize"
+                                   name="PartySize"
+                                   class="form-control"
+                                   min="1"
+                                   max="50"
+                                   value="@Model.PartySize"
+                                   required />
+                            <small class="form-text text-muted">Enter the number of guests. The selected table must have enough capacity.</small>
+                            @Html.ValidationMessageFor(m => m.PartySize, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tableId">Preferred Table</label>
+                            <select id="tableId" name="tableId" class="form-control restaurant-select" required title="Select a preferred table">
+                                <option value="">-- Select a table --</option>
+                                @foreach (var table in tables)
+                                {
+                                    <option value="@table.Id"
+                                            data-capacity="@table.Capacity"
+                                            @(Model.TableId == table.Id ? "selected=\"selected\"" : "")>
+                                        Table @table.TableNumber - @table.Capacity seats (@table.Zone)
+                                    </option>
+                                }
+                            </select>
+                            <small class="form-text text-muted">Tables with capacity smaller than your party size will be hidden.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="SpecialRequest">Special Request</label>
+                            @Html.TextAreaFor(m => m.SpecialRequest, new
+                            {
+                                @class = "form-control",
+                                id = "SpecialRequest",
+                                rows = "4",
+                                maxlength = "500",
+                                placeholder = "Birthday setup, allergies, preferred seat, ..."
+                            })
+                            @Html.ValidationMessageFor(m => m.SpecialRequest, "", new { @class = "text-danger" })
+                        </div>
+
+                        <button type="submit" class="btn btn-warning text-white btn-block">Book Table</button>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-5 mt-4 mt-lg-0">
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h4>Available Tables</h4>
+                    <p class="text-muted">Your requested party size is used to filter suitable tables.</p>
+                    <div id="tableAvailabilityList">
+                        @if (tables.Any())
+                        {
+                            foreach (var table in tables)
+                            {
+                                <div class="border rounded p-3 mb-2 table-option"
+                                     data-capacity="@table.Capacity">
+                                    <strong>Table @table.TableNumber</strong>
+                                    <span class="badge badge-info float-right">@table.Capacity seats</span>
+                                    <div class="small text-muted">@table.Zone</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-light border">No active available tables at the moment.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+<script>
+    $(function () {
+        function filterTables() {
+            var partySize = parseInt($("#PartySize").val(), 10) || 1;
+            $("#tableId option[data-capacity]").each(function () {
+                var capacity = parseInt($(this).data("capacity"), 10) || 0;
+                $(this).toggle(capacity >= partySize);
+            });
+
+            $(".table-option").each(function () {
+                var capacity = parseInt($(this).data("capacity"), 10) || 0;
+                $(this).toggle(capacity >= partySize);
+            });
+
+            var selected = $("#tableId option:selected");
+            if (selected.length && selected.data("capacity") < partySize) {
+                $("#tableId").val("");
+            }
+        }
+
+        $("#PartySize").on("input change", filterTables);
+        filterTables();
+    });
+</script>
+}

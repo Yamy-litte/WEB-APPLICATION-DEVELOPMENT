@@ -1,0 +1,126 @@
+@model RestaurantWebsite.Models.Review
+
+@{
+    ViewBag.Title = "Edit Review";
+    ViewBag.BodyClass = "sub_page";
+    bool isExperience = !Model.DishId.HasValue;
+}
+
+<section class="layout_padding">
+    <div class="container">
+
+        <div class="heading_container heading_center mb-4">
+            <h2>Edit Review</h2>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+
+                <div class="bg-white p-4 rounded shadow-sm">
+
+                    <h4 class="font-weight-bold">
+                        @(isExperience && Model.Dish == null
+                            ? "Overall Dining Experience"
+                            : (Model.Dish != null ? Model.Dish.Name : "Review"))
+                    </h4>
+
+                    <p class="text-muted mb-4">
+                        Order #@Model.OrderId
+                    </p>
+
+                    @using (Html.BeginForm("EditReview", "Account", FormMethod.Post, new { id = "editReviewForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.Id)
+
+                        @Html.ValidationSummary(false, "Please check the information below:", new { @class = "alert alert-danger" })
+
+                        <div class="form-group">
+                            <label class="font-weight-bold">Rating</label>
+
+                            <div class="review-rating-selector" data-current-rating="@Model.Rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <label class="review-rating-item" data-rating="@i">
+                                        <input type="radio"
+                                               name="Rating"
+                                               value="@i"
+                                               @(Model.Rating == i ? "checked=\"checked\"" : "") />
+                                        <i class="fa @(Model.Rating >= i ? "fa-star text-warning" : "fa-star-o text-muted")"></i>
+                                    </label>
+                                }
+                            </div>
+
+                            @Html.ValidationMessageFor(m => m.Rating, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Comment" class="font-weight-bold">Comment</label>
+                            @Html.TextAreaFor(m => m.Comment, new
+                            {
+                                @class = "form-control",
+                                id = "Comment",
+                                rows = "5",
+                                maxlength = "1000",
+                                placeholder = "Share your experience..."
+                            })
+                            @Html.ValidationMessageFor(m => m.Comment, "", new { @class = "text-danger" })
+                        </div>
+
+                        if (!string.IsNullOrWhiteSpace(Model.RestaurantReply))
+                        {
+                            <div class="alert alert-light border">
+                                <strong>Current restaurant response:</strong>
+                                <div class="mt-2">@Model.RestaurantReply</div>
+                                <small class="text-muted">
+                                    Editing this review will clear the current response.
+                                </small>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="@Url.Action("MyReviews", "Account")"
+                               class="btn btn-outline-secondary">
+                                Back
+                            </a>
+
+                            <button type="submit" class="btn btn-warning text-white">
+                                Save Changes
+                            </button>
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section scripts {
+<script>
+    $(function () {
+        function paint(container, rating) {
+            $(container).find(".review-rating-item").each(function () {
+                var value = parseInt($(this).data("rating"), 10);
+                var icon = $(this).find("i");
+
+                icon.removeClass("fa-star fa-star-o text-warning text-muted");
+
+                if (value <= rating) {
+                    icon.addClass("fa-star text-warning");
+                } else {
+                    icon.addClass("fa-star-o text-muted");
+                }
+            });
+        }
+
+        $(document).on("click", ".review-rating-item", function () {
+            var rating = parseInt($(this).data("rating"), 10);
+            $(this).find("input").prop("checked", true);
+            paint($(this).closest(".review-rating-selector"), rating);
+        });
+    });
+</script>
+}

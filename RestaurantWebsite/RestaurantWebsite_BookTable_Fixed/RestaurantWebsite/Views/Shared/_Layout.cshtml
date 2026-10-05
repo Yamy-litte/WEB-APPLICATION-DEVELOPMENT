@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+    <title>@ViewBag.Title - RestaurantWebsite</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          type="text/css"
+          href="@Url.Content("~/Resources/User/css/bootstrap.css")" />
+
+    <!-- Owl Carousel -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="@Url.Content("~/Resources/User/css/font-awesome.min.css")" />
+
+    <!-- Feane -->
+    <link rel="stylesheet"
+          href="@Url.Content("~/Resources/User/css/style.css")" />
+
+    <!-- Responsive -->
+    <link rel="stylesheet"
+          href="@Url.Content("~/Resources/User/css/responsive.css")" />
+
+    @RenderSection("Styles", required: false)
+
+</head>
+
+<body class="@ViewBag.BodyClass">
+
+    <!-- ================= HERO AREA ================= -->
+    <div class="hero_area">
+
+        <!-- Background -->
+        <div class="bg-box">
+            <img src="@Url.Content("~/Resources/User/images/hero-bg.jpg")"
+                 alt="Restaurant Background" />
+        </div>
+
+        <!-- Header -->
+        @Html.Partial("_Header")
+
+        <!-- Hero section - only Home -->
+        @RenderSection("Hero", required: false)
+
+    </div>
+    <!-- ================ END HERO AREA ================ -->
+    <!-- ================= PAGE CONTENT ================= -->
+
+    @RenderBody()
+
+    <!-- ================ END PAGE CONTENT ================ -->
+    <!-- ================= FOOTER ================= -->
+
+    @Html.Partial("_Footer")
+
+    <!-- ================ END FOOTER ================ -->
+    <!-- jQuery -->
+    <script src="@Url.Content("~/Resources/User/js/jquery-3.4.1.min.js")"></script>
+
+    <!-- Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="@Url.Content("~/Resources/User/js/bootstrap.js")"></script>
+
+    <!-- Owl Carousel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+    <!-- Isotope -->
+    <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="@Url.Content("~/Resources/User/js/custom.js")"></script>
+
+    @RenderSection("scripts", required: false)
+
+</body>
+
+</html>

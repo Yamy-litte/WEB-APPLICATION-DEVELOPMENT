@@ -1,0 +1,179 @@
+@model RestaurantWebsite.Models.User
+
+@{
+    ViewBag.Title = "Register";
+    ViewBag.BodyClass = "sub_page";
+}
+
+<section class="food_section layout_padding">
+
+    <div class="container">
+
+        <div class="heading_container heading_center mb-4">
+            <h2>Create Account</h2>
+        </div>
+
+        <div class="row justify-content-center">
+
+            <div class="col-md-8 col-lg-6">
+
+                <div class="bg-white p-4 rounded shadow-sm">
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        @Html.ValidationSummary(
+                            true,
+                            "Please check the information below.",
+                            new { @class = "alert alert-danger" })
+                    }
+
+                    @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="form-group">
+                            <label for="FullName" class="font-weight-bold">
+                                Full Name
+                            </label>
+
+                            @Html.TextBoxFor(
+                                m => m.FullName,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "FullName",
+                                    maxlength = "100",
+                                    placeholder = "Enter your full name"
+                                })
+
+                            @Html.ValidationMessageFor(
+                                m => m.FullName,
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Email" class="font-weight-bold">
+                                Email
+                            </label>
+
+                            @Html.TextBoxFor(
+                                m => m.Email,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "Email",
+                                    type = "email",
+                                    maxlength = "150",
+                                    placeholder = "Enter your email"
+                                })
+
+                            @Html.ValidationMessageFor(
+                                m => m.Email,
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Phone" class="font-weight-bold">
+                                Phone Number
+                            </label>
+
+                            @Html.TextBoxFor(
+                                m => m.Phone,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "Phone",
+                                    maxlength = "20",
+                                    placeholder = "Enter your phone number"
+                                })
+
+                            @Html.ValidationMessageFor(
+                                m => m.Phone,
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Address" class="font-weight-bold">
+                                Address
+                            </label>
+
+                            @Html.TextAreaFor(
+                                m => m.Address,
+                                new
+                                {
+                                    @class = "form-control",
+                                    id = "Address",
+                                    rows = "3",
+                                    maxlength = "250",
+                                    placeholder = "Enter your address"
+                                })
+
+                            @Html.ValidationMessageFor(
+                                m => m.Address,
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Password" class="font-weight-bold">
+                                Password
+                            </label>
+
+                            <input type="password"
+                                   id="Password"
+                                   name="password"
+                                   class="form-control"
+                                   minlength="6"
+                                   required
+                                   placeholder="At least 6 characters" />
+
+                            @Html.ValidationMessage(
+                                "Password",
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ConfirmPassword" class="font-weight-bold">
+                                Confirm Password
+                            </label>
+
+                            <input type="password"
+                                   id="ConfirmPassword"
+                                   name="confirmPassword"
+                                   class="form-control"
+                                   minlength="6"
+                                   required
+                                   placeholder="Re-enter your password" />
+
+                            @Html.ValidationMessage(
+                                "ConfirmPassword",
+                                "",
+                                new { @class = "text-danger" })
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-warning text-white btn-block font-weight-bold">
+                            Register
+                        </button>
+                    }
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Already have an account?</span>
+                        <a href="@Url.Action("Login", "Account")">
+                            Login
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>

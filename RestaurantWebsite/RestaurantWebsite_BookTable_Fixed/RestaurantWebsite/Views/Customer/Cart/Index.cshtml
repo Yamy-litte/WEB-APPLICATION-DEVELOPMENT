@@ -1,0 +1,923 @@
+@using System.Linq
+@using System.Collections.Generic
+@model IEnumerable<RestaurantWebsite.Models.Dish>
+
+@{
+    ViewBag.Title = "Shopping Cart";
+    ViewBag.BodyClass = "sub_page";
+
+    var quantities =
+        ViewBag.CartQuantities
+        as Dictionary<int, int>
+        ?? new Dictionary<int, int>();
+
+    var combos =
+        ViewBag.CartCombos
+        as IEnumerable<RestaurantWebsite.Models.Combo>
+        ?? new List<RestaurantWebsite.Models.Combo>();
+
+    var comboQuantities =
+        ViewBag.ComboQuantities
+        as Dictionary<int, int>
+        ?? new Dictionary<int, int>();
+
+    var suggestions =
+        ViewBag.ComboSuggestions
+        as IEnumerable<RestaurantWebsite.Models.Combo>
+        ?? new List<RestaurantWebsite.Models.Combo>();
+
+    decimal cartTotal =
+        ViewBag.CartTotal != null
+            ? (decimal)ViewBag.CartTotal
+            : 0m;
+}
+
+
+<section class="food_section layout_padding">
+
+    <div class="container">
+
+        <div class="heading_container heading_center">
+
+            <h2>
+                Your Cart
+            </h2>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- SUCCESS -->
+        <!-- ================================================= -->
+
+        @if (TempData["CartSuccess"] != null)
+        {
+            <div class="alert alert-success mt-4">
+
+                <i class="fa fa-check-circle"></i>
+
+                @TempData["CartSuccess"]
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- ERROR -->
+        <!-- ================================================= -->
+
+        @if (TempData["CartError"] != null)
+        {
+            <div class="alert alert-danger mt-4">
+
+                <i class="fa fa-exclamation-circle"></i>
+
+                @TempData["CartError"]
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- DISH CART -->
+        <!-- ================================================= -->
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive mt-4">
+
+                <table class="table table-bordered bg-white">
+
+                    <thead class="thead-dark">
+
+                        <tr>
+
+                            <th>
+                                Dish
+                            </th>
+
+                            <th class="text-center">
+                                Price
+                            </th>
+
+                            <th class="text-center">
+                                Quantity
+                            </th>
+
+                            <th class="text-center">
+                                Subtotal
+                            </th>
+
+                            <th class="text-center">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var item in Model)
+                        {
+                            int quantity =
+                                quantities.ContainsKey(item.Id)
+                                    ? quantities[item.Id]
+                                    : 0;
+
+                            decimal subtotal =
+                                item.Price * quantity;
+
+
+                            string imageUrl =
+                                "~/Resources/User/images/f1.png";
+
+
+                            if (item.DishImages != null &&
+                                item.DishImages.Any())
+                            {
+                                var primaryImg =
+                                    item.DishImages.FirstOrDefault(
+                                        img => img.IsPrimary)
+                                    ?? item.DishImages.First();
+
+                                if (!string.IsNullOrEmpty(
+                                    primaryImg.ImageUrl))
+                                {
+                                    imageUrl =
+                                        primaryImg.ImageUrl;
+                                }
+                            }
+
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <img src="@Url.Content(imageUrl)"
+                                             alt="@item.Name"
+                                             style="width:70px;height:70px;object-fit:cover;border-radius:8px;"
+                                             class="mr-3" />
+
+                                        <div>
+
+                                            <strong>
+                                                @item.Name
+                                            </strong>
+
+                                            <br />
+
+                                            <small class="text-muted">
+
+                                                @(item.Category != null
+                                                    ? item.Category.Name
+                                                    : "General")
+
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td class="text-center align-middle">
+
+                                    @item.Price.ToString("N0") VNĐ
+
+                                </td>
+
+
+                                <td class="text-center align-middle">
+
+                                    <div class="d-flex align-items-center justify-content-center">
+
+                                        <!-- DECREASE -->
+                                        @using (Html.BeginForm(
+                                            "UpdateCartItem",
+                                            "Menu",
+                                            FormMethod.Post,
+                                            new
+                                            {
+                                                @class = "m-0"
+                                            }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@item.Id" />
+
+                                            <input type="hidden"
+                                                   name="quantity"
+                                                   value="@(quantity - 1)" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    title="Decrease quantity"
+                                                    @(quantity <= 1 ? "disabled=disabled" : "")>
+
+                                                <i class="fa fa-minus"></i>
+
+                                            </button>
+                                        }
+
+
+                                        <input type="text"
+                                               value="@quantity"
+                                               readonly
+                                               class="form-control text-center mx-2"
+                                               style="width:55px;" />
+
+
+                                        <!-- INCREASE -->
+                                        @using (Html.BeginForm(
+                                            "UpdateCartItem",
+                                            "Menu",
+                                            FormMethod.Post,
+                                            new
+                                            {
+                                                @class = "m-0"
+                                            }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@item.Id" />
+
+                                            <input type="hidden"
+                                                   name="quantity"
+                                                   value="@(quantity + 1)" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-warning"
+                                                    title="Increase quantity"
+                                                    @(quantity >= 100 ? "disabled=disabled" : "")>
+
+                                                <i class="fa fa-plus"></i>
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <td class="text-center align-middle">
+
+                                    <strong>
+                                        @subtotal.ToString("N0") VNĐ
+                                    </strong>
+
+                                </td>
+
+
+                                <td class="text-center align-middle">
+
+                                    @using (Html.BeginForm(
+                                        "RemoveFromCart",
+                                        "Menu",
+                                        FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@item.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger">
+
+                                            <i class="fa fa-trash"></i>
+
+                
+
+                                        </button>
+                                    }
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- COMBO CART -->
+        <!-- ================================================= -->
+
+        @if (combos.Any())
+        {
+            <div class="mt-5">
+
+                <h4 class="font-weight-bold mb-3">
+                    Your Combos
+                </h4>
+
+
+                @foreach (var combo in combos)
+                {
+                    int quantity =
+                        comboQuantities.ContainsKey(combo.Id)
+                            ? comboQuantities[combo.Id]
+                            : 0;
+
+                    decimal subtotal =
+                        combo.Price * quantity;
+
+
+                    <div class="card shadow-sm mb-4">
+
+                        <div class="card-body">
+
+                            <div class="row align-items-center">
+
+                                <!-- IMAGE -->
+                                <div class="col-md-2 text-center">
+
+                                    @if (!string.IsNullOrEmpty(
+                                        combo.ImageUrl))
+                                    {
+                                        <img src="@Url.Content(combo.ImageUrl)"
+                                             alt="@combo.Name"
+                                             style="width:100px;height:100px;object-fit:cover;border-radius:10px;" />
+                                    }
+                                    else
+                                    {
+                                        <img src="@Url.Content("~/Resources/User/images/o2.jpg")"
+                                             alt="@combo.Name"
+                                             style="width:100px;height:100px;object-fit:cover;border-radius:10px;" />
+                                    }
+
+                                </div>
+
+
+                                <!-- COMBO INFO -->
+                                <div class="col-md-4">
+
+                                    <h5 class="font-weight-bold">
+                                        @combo.Name
+                                    </h5>
+
+                                    <p class="text-muted mb-1">
+
+                                        @(
+                                            !string.IsNullOrEmpty(
+                                                combo.Description)
+                                                ? combo.Description
+                                                : "Combo"
+                                        )
+
+                                    </p>
+
+                                    <strong class="text-danger">
+
+                                        @combo.Price.ToString("N0") VNĐ
+
+                                    </strong>
+
+                                </div>
+
+
+                                <!-- QUANTITY -->
+                                <div class="col-md-3">
+
+                                    <label class="text-secondary">
+                                        Quantity
+                                    </label>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <!-- DECREASE -->
+                                        @using (Html.BeginForm(
+                                            "UpdateComboCartItem",
+                                            "Menu",
+                                            FormMethod.Post,
+                                            new
+                                            {
+                                                @class = "m-0"
+                                            }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@combo.Id" />
+
+                                            <input type="hidden"
+                                                   name="quantity"
+                                                   value="@(quantity - 1)" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    title="Decrease quantity"
+                                                    @(quantity <= 1 ? "disabled=disabled" : "")>
+
+                                                <i class="fa fa-minus"></i>
+
+                                            </button>
+                                        }
+
+
+                                        <input type="text"
+                                               value="@quantity"
+                                               readonly
+                                               class="form-control text-center mx-2"
+                                               style="width:55px;" />
+
+
+                                        <!-- INCREASE -->
+                                        @using (Html.BeginForm(
+                                            "UpdateComboCartItem",
+                                            "Menu",
+                                            FormMethod.Post,
+                                            new
+                                            {
+                                                @class = "m-0"
+                                            }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="id"
+                                                   value="@combo.Id" />
+
+                                            <input type="hidden"
+                                                   name="quantity"
+                                                   value="@(quantity + 1)" />
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-warning"
+                                                    title="Increase quantity"
+                                                    @(quantity >= 100 ? "disabled=disabled" : "")>
+
+                                                <i class="fa fa-plus"></i>
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- SUBTOTAL -->
+                                <div class="col-md-2">
+
+                                    <small class="text-muted">
+                                        Subtotal
+                                    </small>
+
+                                    <br />
+
+                                    <strong>
+                                        @subtotal.ToString("N0") VNĐ
+                                    </strong>
+
+                                </div>
+
+
+                                <!-- REMOVE -->
+                                <div class="col-md-1 text-center">
+
+                                    @using (Html.BeginForm(
+                                        "RemoveComboFromCart",
+                                        "Menu",
+                                        FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@combo.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Remove combo">
+
+                                            <i class="fa fa-trash"></i>
+
+                                        </button>
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- COMBO ITEMS -->
+                            @if (combo.ComboItems != null &&
+                                 combo.ComboItems.Any())
+                            {
+                                <div class="mt-3 ml-md-5">
+
+                                    <h6 class="font-weight-bold">
+                                        Combo Includes
+                                    </h6>
+
+
+                                    @foreach (var comboItem in combo.ComboItems)
+                                    {
+                                        int itemTotalQuantity =
+                                            comboItem.Quantity *
+                                            quantity;
+
+                                        <div class="d-flex justify-content-between border-bottom py-2">
+
+                                            <span class="text-muted">
+
+                                                @(
+                                                    comboItem.Dish != null
+                                                        ? comboItem.Dish.Name
+                                                        : "Dish #" +
+                                                          comboItem.DishId
+                                                )
+
+                                            </span>
+
+                                            <span>
+
+                                                x @itemTotalQuantity
+
+                                            </span>
+
+                                        </div>
+                                    }
+
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- EMPTY CART -->
+        <!-- ================================================= -->
+
+        @if ((Model == null || !Model.Any()) &&
+             !combos.Any())
+        {
+            <div class="text-center py-5">
+
+                <div style="font-size:60px;"
+                     class="text-muted mb-3">
+
+                    <i class="fa fa-shopping-cart"></i>
+
+                </div>
+
+
+                <h4>
+                    Your cart is empty
+                </h4>
+
+
+                <p class="text-muted">
+
+                    Add some delicious dishes
+                    from our menu.
+
+                </p>
+
+
+                <a href="@Url.Action("Index", "Menu")"
+                   class="btn btn-warning text-white">
+
+                    Browse Menu
+
+                </a>
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- CART SUMMARY -->
+        <!-- ================================================= -->
+
+        @if ((Model != null && Model.Any()) ||
+             combos.Any())
+        {
+            <div class="row justify-content-end mt-4">
+
+                <div class="col-md-5">
+
+                    <div class="card shadow-sm">
+
+                        <div class="card-body">
+
+                            <h5 class="font-weight-bold mb-3">
+                                Cart Summary
+                            </h5>
+
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>
+                                    Total Items
+                                </span>
+
+                                <strong>
+
+                                    @{
+                                        int totalItemCount =
+                                            quantities.Values.Sum()
+                                            +
+                                            comboQuantities.Values.Sum();
+                                    }
+
+                                    @totalItemCount
+
+                                </strong>
+
+                            </div>
+
+
+                            <hr />
+
+
+                            <div class="d-flex justify-content-between">
+
+                                <span class="font-weight-bold">
+                                    Total
+                                </span>
+
+                                <strong class="text-danger">
+
+                                    @cartTotal.ToString("N0") VNĐ
+
+                                </strong>
+
+                            </div>
+
+
+                            <div class="mt-3">
+
+                                <a href="@Url.Action("Index", "Menu")"
+                                   class="btn btn-outline-secondary mr-2">
+
+                                    Continue Shopping
+
+                                </a>
+
+
+                                <a href="@Url.Action("Checkout", "Order")"
+                                   class="btn btn-warning text-white">
+
+                                    Checkout
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CLEAR CART -->
+            <div class="text-right mt-3">
+
+                @using (Html.BeginForm(
+                    "ClearCart",
+                    "Menu",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger">
+
+                        <i class="fa fa-trash"></i>
+
+                        Clear Cart
+
+                    </button>
+                }
+
+            </div>
+        }
+
+
+        <!-- ================================================= -->
+        <!-- COMBO SUGGESTION MODAL -->
+        <!-- ================================================= -->
+
+        @if (suggestions.Any())
+        {
+            <div class="modal fade"
+                 id="comboSuggestionModal"
+                 tabindex="-1"
+                 role="dialog"
+                 aria-labelledby="comboSuggestionModalLabel"
+                 aria-hidden="true">
+
+                <div class="modal-dialog modal-lg modal-dialog-centered"
+                     role="document">
+
+                    <div class="modal-content"
+                         style="border-radius:15px;overflow:hidden;">
+
+                        <div class="modal-header bg-warning text-white">
+
+                            <h5 class="modal-title font-weight-bold"
+                                id="comboSuggestionModalLabel">
+
+                                Combo Suggestion
+
+                            </h5>
+
+
+                            <button type="button"
+                                    class="close text-white"
+                                    data-dismiss="modal"
+                                    aria-label="Close">
+
+                                <span aria-hidden="true">
+                                    &times;
+                                </span>
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="modal-body">
+
+                            @if (suggestions.Count() == 1)
+                            {
+                                <p class="mb-4">
+
+                                    Your dishes can form this combo.
+                                    Would you like to convert them
+                                    into the combo?
+
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="mb-4">
+
+                                    Your dishes can form multiple
+                                    combos. Please choose which combo
+                                    you want to use.
+
+                                </p>
+                            }
+
+
+                            @foreach (var suggestion in suggestions)
+                            {
+                                <div class="border rounded p-3 mb-3">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+
+                                            <h5 class="font-weight-bold mb-1">
+
+                                                @suggestion.Name
+
+                                            </h5>
+
+                                            <span class="text-danger font-weight-bold">
+
+                                                @suggestion.Price.ToString("N0") VNĐ
+
+                                            </span>
+
+                                        </div>
+
+
+                                        @using (Html.BeginForm(
+                                            "ApplyComboSuggestion",
+                                            "Menu",
+                                            FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="comboId"
+                                                   value="@suggestion.Id" />
+
+                                            <button type="submit"
+                                                    class="btn btn-warning text-white">
+
+                                                Choose This Combo
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+
+                                    @if (suggestion.ComboItems != null &&
+                                         suggestion.ComboItems.Any())
+                                    {
+                                        <div class="mt-3">
+
+                                            @foreach (var suggestionItem in suggestion.ComboItems)
+                                            {
+                                                <div class="d-flex justify-content-between border-bottom py-1">
+
+                                                    <span>
+
+                                                        @(
+                                                            suggestionItem.Dish != null
+                                                                ? suggestionItem.Dish.Name
+                                                                : "Dish #" +
+                                                                  suggestionItem.DishId
+                                                        )
+
+                                                    </span>
+
+                                                    <span>
+
+                                                        x @suggestionItem.Quantity
+
+                                                    </span>
+
+                                                </div>
+                                            }
+
+                                        </div>
+                                    }
+
+                                </div>
+                            }
+
+                        </div>
+
+
+                        <div class="modal-footer">
+
+                            @using (Html.BeginForm(
+                                "DismissComboSuggestions",
+                                "Menu",
+                                FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-secondary">
+
+                                    Keep My Items
+
+                                </button>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</section>
+
+
+@section scripts {
+
+    @if (suggestions.Any())
+    {
+        <script>
+
+                                    $(document).ready(function () {
+
+                                        $("#comboSuggestionModal").modal({
+                                            show: true,
+                                            backdrop: "static"
+                                        });
+
+                                    });
+
+        </script>
+    }
+
+}
